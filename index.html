@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Docker Dreams</title>
+    <meta charset="utf-8" />
+
+    <script src="scripts/jquery.min.js"></script>
+    <script src="scripts/jquery-ui.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script>
+
+      // this code is necessary only for showing source in example
+      $(window).load(function() {
+        // position source box in center
+        $('#source').position({
+          of: $('#slideshow')
+        });
+
+        // show source box
+        $('.show-source > a, #overlay').click(function(e) {
+          e.preventDefault();
+          $('#overlay, #source').toggle(300);
+        });
+
+        // open source links in new tab/window
+        $('.show-source > a').attr('target', '_blank');
+      });
+    </script>
+
+
+  </head>
+
+<body>
+<textarea id="source" readonly>
+
+name: open
+class: center
+
+# Docker Dreams
+.imagine[![dreams](images/imagine.png)]
+
+---
+
+## Explanation Problem
+
+.detail-table[
+Too Little | Too Much |
+---------- | -------- |
+Boring     | Lost |
+Another Intro | Premature Insight |
+Not Real World | Too Specific/Too Real |
+]
+
+---
+
+## Our Production
+
+* Rails monorail, a few smaller apps
+* Configuration in Chef (templates partially)
+* Deployment with Capistrano, through Jenkins, from Slack
+* Packages and build server (golden `.deb` packages)
+* Ruby version manager (rbenv)
+* Configs are in the app and in a central place
+* Secrets are in a central place
+* Local development is done on laptops with homebrew or linux packages
+
+.imagine[![blue curve](images/blue_1.png)]]
+
+---
+
+## Walkthrough of a deployment
+
+### Pre deploy
+* Pull request / code review (+2 from peer)
+* CI / rebase / push to master (can wait for CI a 2nd time)
+* CI is 18 minutes (with parallel workers on CircleCI)
+
+### Deployment
+* starts with a tag
+* Slack: `/tag monorail` master or a sha
+* Slack: `/deploy monorail-20160100 monorail production`
+* Wait for Jenkins to deploy
+* Watch newrelic for errors
+
+.imagine[![blue curve](images/blue_2.png)]]
+
+---
+
+## Problems
+
+* Our current environment is cumbersome to bootstrap.
+  * If a design person / mobile dev starts, we have to do it for them.
+* Homebrew doesn't let you lock to a version.
+* We don't know it's going to work until we deploy to a staging environment.
+* Staging environments require us to bring almost everything.
+* Staging is full a lot.  Everything we do in prod has no power in dev domain.
+* Our Vagrant images are stale.  There wasn't use of them.
+* Vagrant took 13-19 minutes to rebuild.
+* We can't deploy Vagrant.
+* We can't run Vagrant in CI (I guess we could?).
+* Running micro services means running them in tmux.
+  * This is weird when working on branches.
+    * Person you are coordinating with has to pull and run the other repo.
+    * A calls B, commit to B, everyone pull B, continue work on A.
+* Homebrew is global, repos are not.  We wanted the Vagrant use case back.
+* CI takes a long time (relevant?)
+
+.imagine[![gray](images/gray_1.png)]]
+
+---
+
+## Biggest Problem
+
+![rube goldberg before](images/before.png)
+
+---
+class: center
+
+## Promises, Promises
+
+![after](images/after.gif)
+
+
+---
+
+## What Is Docker
+
+.image-100[![docker nutshell](images/container_vs_vm.jpg)]
+
+- It's not a VM.
+- It runs a single process in a container. `rails s`
+- It's efficient.  Like git.
+- It's *like* Vagrant.  But not exactly Vagrant.  (svn vs git)
+
+
+---
+### Basics
+At this point (mid 2016), just install docker beta for mac.
+
+#### Command Examples
+
+`docker run -it ubuntu /bin/bash`<br>
+.small[_runs a bash container from the ubuntu image_]
+
+`docker ps`<br>
+.small[_list running containers_]
+
+`docker images`<br>
+.small[_list images_]
+
+`docker`<br>
+.small[_get help_]
+
+`docker-compose up`<br>
+.small[_runs all services in repo defined in docker-compose.yml_]
+
+.imagine[![gray](images/sea_1.png)]]
+
+
+---
+
+## Docker Difficulty
+
+- CLI (git level)
+- Terminology
+- Many Tools (what gems should I use?)
+- Modifying your app / flow / team
+- Complete guides don't work because everyone's environments are different
+- I feel stupid, I continue to feel stupid (this is ok)
+  - It's ok, at Dockercon, people were lost a lot.
+  - Sometimes, it's good to know it's difficult.
+- Knowing what to care about (unikernels?)
+
+.imagine[![blue curve](images/blue_1.png)]]
+
+---
+
+## Problem Space
+
+.image-100[![docker ecosystem](images/ecosystem_1.png)]
+
+---
+
+.image-100[![docker ecosystem](images/ecosystem_2.png)]
+
+---
+
+.image-100[![docker ecosystem](images/ecosystem_3.png)]
+
+---
+
+.image-100[![docker ecosystem](images/ecosystem_4.png)]
+
+---
+
+## So Confusing
+
+That third diagram was actually mobile gaming middleware in korea.
+
+.image-40[![troll](images/troll.gif)]
+
+---
+
+## Learning Suggestions
+
+- Watch videos (multiple times on the same subject)
+  - different speakers, different depths
+- Do the official interactive tutorial but don't worry if it doesn't sink in (gone?)
+- Use a cheat sheet or make one yourself
+- Keep a dev log
+- Make your own aliases (examples later)
+
+.imagine[![gray](images/sea_1.png)]]
+
+---
+## So many tools
+
+* Understand what problem it's solving
+* Understand what team size it expects
+* Understand gotchas / limits
+* Understand integration points
+* Understand competing space (kubernetes vs coreos)
+* Choose to avoid some things, don't learn all the things at once
+  * Chunk similar products to save time, be mindful of your ignorance
+  * For example, I chunk kubernetes + coreos (fleet) together (not fair to kubernetes)
+
+---
+
+## Learning In Chunks
+
+.detail-table[
+Docker |
+------ |
+A shippable app container.  |
+<br> |
+_Limits:_ Dockerfile format is basic.  |
+Not a configuration management replacement. |
+Not a VM. Not a cluster. Not a cloud. |
+Basic building block. |
+]
+
+.detail-table[
+Docker Compose |
+------ |
+A yaml file that links docker containers. |
+You run `docker-compose up` to bring an app up with redis/rails/mysql. |
+<br> |
+_Limits:_ You lose some ability to integrate with tools. |
+Kitematic, layer explorer |
+Images don't work by themselves anymore. |
+Need to `docker-compose run` to run stuff that depends on links. |
+]
+
+.imagine[![dreams](images/imagine.png)]
+
+---
+
+.detail-table[
+CoreOS |
+------ |
+A minimal OS to run Docker.  Includes things you will |
+probably want later anyway like centralized |
+config, service discovery and cluster management (fleet) |
+<br> |
+_Limits:_ IDK! :ignorance_emoji: |
+]
+
+.detail-table[
+Confd |
+------ |
+Watches consul/etcd for changes.  Updates a template |
+from values when that happens. |
+<br> |
+_Limits:_ Not chef level.  Is a simple tool.|
+]
+
+.detail-table[
+Fleet |
+------ |
+Cluster orchestration tool.  Declarative.|
+`$ fleetctl start news@{1..3}.service` |
+<br> |
+_Limits:_ CoreOS specific.  Obviously not magic.  Systemd.|
+But replaceable with Kubernetes if you want that (?)|
+]
+
+---
+
+.detail-table[
+Packer |
+------ |
+Builds Docker containers.  Abstraction.  |
+<br> |
+_Limits:_ Packerfile format is basic. |
+Not continuous deployer.  Not a test runner. |
+Not Chef replacement. Doesn't combine images. |
+]
+
+.detail-table[
+Quay.io |
+------ |
+A private/paid registry from CoreOS folks. |
+Can be used by itself without CoreOS. |
+Is pretty cheap.  Has nice integration hooks. |
+Why?  Because running a registry is sad mode. |
+<br> |
+_Limits:_ None we've found. |
+]
+
+---
+
+## Sum up of Configuration Stores
+
+.image-100[![gray](images/cm_stores.png)]
+
+---
+
+## Too Much!
+
+Let's get back to app dev for a sec.
+How do we build and deploy a blog.
+
+```sh
+$ rails new blog
+$ bundle exec rake db:create
+$ rails g scaffold Post name:string title:string body:text
+$ bundle exec rake db:migrate
+$ bundle exec rails s
+```
+
+---
+
+## Whoa there 15 minutes
+
+
+```sh
+$ rails new blog
+$ bundle exec rake db:create
+$ rails g scaffold Post name:string title:string body:text
+$ bundle exec rake db:migrate
+$ bundle exec rails s
+```
+
+What did we really need to do this on our laptop?
+Or: how is this missing context unfair to newcomers?
+
+* `$USER`  This is probably `deploy` or `app` in prod.
+* Writable modern ruby.
+* You can install gems (permissions).  You can install ruby from Gemfile.
+* bundler is installed, the command isn't bundler, bundle exec prefix.
+* Some database is installed and you can create a database.
+* Your hostname is localhost.
+* The stuff in `config/` is fine including secrets.
+* The database is on the same box.
+* Every other new service (redis / memcached) is on localhost.
+
+All this can change and probably will in production.
+
+---
+## Automating This Into Concrete
+
+### Dev Use Case
+
+* `$USER`
+  * in `Dockerfile` as RUNAS
+  * already created in os base image
+* Ruby is already installed as correct user in os base image.
+* Bundler is installed.
+* Database is linked through docker-compose.  The db image runs solo, not coupled.
+* Hostnames are links.
+* Things in `config/` are generated from templates from Chef/CM
+* New services can be added as docker links using a yaml file.
+* Scripts are created in the repo with knowledge baked-in like `bundle exec`
+
+Tools used: This is just docker + docker-compose (comes with docker package)
+
+---
+## Automating This Into Concrete
+
+### Production Use Case
+
+* Roll out the image.  It already works and has a SHA.  We know it works.
+* Settings that change per environment are in ENV.
+* Settings that require restarts are run with confd and templates are generated from k/v pairs.
+* Secrets are in `ENV`.  Failover is happening already, you don't care if you bounce a box.
+* Every node in the cluster can speak for the other node.
+
+---
+
+### Container Abstractions
+
+You lost me.  You're doing the premature insight thing.
+Can you just walk me through the happy path?
+
+.image-90[![after](images/cargo_ship.jpg)]
+
+---
+
+## Get Your App Dockerized
+
+Practical advice.
+
+* Reason about your app
+  * think about dependencies / repos
+  * turn these into image names
+* Get ruby + OS done.  Name as `os_base`
+* Dockerize your data sources.  Name as `redis_base`
+* Dockerize your app using the bases.  Name as `monorail`.
+
+Success is:
+```sh
+$ docker run widgetcorp/monorail
+```
+
+---
+
+## Next Dockerization Steps
+
+Do you have existing devops infrastructure?
+
+* Reuse configuration management
+* Build docker base image from CM
+* More realistic images!  Images that mirror production! (packer, will explain)
+
+Docker Image Hierarchy
+```
+Things That Change
+
+os base  | --> app_base   | --> app
+==========================================
+security |    ruby / libs |     master
+------------------------------------------
+openssl  |    libxml      |     git commit
+```
+
+Updating all this is not hard.  I was confused
+until I did it like 3 times.
+
+---
+## Packer
+.image-90[![packer overview](images/packer.jpg)]
+
+---
+## Packer
+
+Packer is an abstraction layer for building docker images.  Many sources, many outputs.
+
+.image-90[![packer flow](images/packer_flow.png)]
+
+
+---
+## Prod Realism with Packer
+
+.image-90[![packer win](images/packer_realism.png)]
+
+- Exact ruby binaries
+- Same server layout from chef
+  - (does the www/deploy/app user have access to /opt?)
+  - is imagemagic installed and right?
+
+
+---
+## Packer
+
+.eye-chart[
+```json
+{
+  "builders": [
+    {
+      "type": "docker",
+      "pull": false,
+      "image": "quay.io/goldstar/ubuntu:latest",
+      "commit": true
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "../../submodules/etch",
+      "destination": "/tmp"
+    },
+    {
+      "type": "shell",
+      "scripts": ["../../shared_scripts/bootstrap.sh"]
+    },
+    {
+      "type": "chef-solo",
+      "chef_environment": "development",
+      "environments_path": "../../submodules/chef-repo/environments",
+      "cookbook_paths": [
+        "../../submodules/chef-repo/cookbooks",
+        "../../submodules/chef-repo/cookbooks/__COMMUNITY__",
+        "../../submodules/chef-repo/cookbooks/__COMMUNITY__/__MODIFIED__"
+      ],
+      "install_command": "apt-get install chef",
+      "prevent_sudo": true,
+      "run_list": ["goldstar"]
+    }
+  ],
+
+  "post-processors": [
+    [
+      {
+        "type": "docker-tag",
+        "repository": "goldstar/goldstar_base",
+        "tag": "latest",
+        "force": true
+      }
+    ]
+  ]
+}
+```
+]
+
+
+---
+### Push to Registry
+
+.image-90[![after](images/quay.png)]
+
+---
+## Sharing
+
+Quay lets you:
+* Share images you've built privately
+* Docker lets you tag versions as `latest` or numbers / tags, whatever you want
+* Pull tags through quay for your team.
+
+In the future:
+* build docker image and push to quay on test pass
+
+You can run your own registry (called docker distribution).  There used to be some gotchas around deletes.
+For us, it's just easier to outsource.
+
+
+---
+
+## Glue with Docker Compose
+
+```yaml
+db:
+  image: quay.io/widgetcorp/postgres
+  environment:
+    POSTGRES_USER: dbuser
+
+  # Expose creates an internal link between containers.  If you want
+  # to hit the database from your docker-machine ip then change this
+  # to ports.  You can get a db shell without exposing ports.
+  # docker-compose run web bash -c 'psql -U ${DATABASE_USER} -h db ${DATABASE_NAME}'
+  expose:
+    - "5432"
+  volumes:
+    - monorail-postgres:/var/lib/postgresql/data
+
+redis:
+  image: quay.io/widgetcorp/redis
+  expose:
+    - "6379"
+  volumes:
+    - monorail-redis:/var/lib/redis/data
+
+web:
+  image: quay.io/widgetcorp/rails_base
+  links:
+    - db
+    - redis
+  volumes:
+    - .:/monorail
+  ports:
+    - "3000:3000"
+  env_file:
+    - .rails.env
+```
+
+---
+
+## Docker Compose
+
+.image-100[![gray](images/docker_diff.png)]
+
+---
+
+## Running Locally
+
+- Install Docker Beta for Mac!
+
+```yaml
+# because we have private gems, only if you did a bundle update
+bundle package --all --no-install
+
+# db migrations?
+docker-compose run web rake db:create
+docker-compose run web rake db:migrate
+
+# Run it.  This will be your day to day.
+docker-compose up     # foreground, ctrl-c stops
+
+# Or run in background
+docker-compose up -d  # background
+docker-compose stop   # background
+```
+
+---
+## Hot Tip: Aliases
+
+```bash
+# Project "Replacing Homebrew With Docker"
+# ----------------------------------------------
+
+# Optional, if private registry
+DOCKER_PREFIX=quay.io/corp
+
+del_stopped(){
+  local name=$1
+  local state=$(docker inspect --format "{{.State.Running}}" $name 2>/dev/null)
+
+  if [[ "$state" == "false" ]]; then
+    docker rm $name
+  fi
+}
+
+redis-cli() {
+  del_stopped redis-cli
+  docker run -it --net corp --link corp_redis_1:redis-cli --rm \
+    $DOCKER_PREFIX/redis redis-cli -h corp_redis_1 -p 6379
+}
+
+redis-server() {
+  del_stopped redis-server
+  docker run -d -p 6379:6379 --net corp_default --name redis-server \
+    $DOCKER_PREFIX/redis /usr/bin/redis-server
+}
+alias redis=redis-cli
+```
+
+---
+## Aliases
+
+```
+# Docker cleanup shortcuts
+function docker-clean-exited() {
+  if [[ $(docker ps -a -q -f status=exited | wc -l) -eq 0 ]]; then
+    echo 'Exited docker containers are already clean.  :)'
+  else
+    docker rm -v $(docker ps -a -q -f status=exited)
+  fi
+}
+
+function docker-clean-images() {
+  if [[ $(docker images -f "dangling=true" | wc -l) -eq 0 ]]; then
+    echo 'Dangling docker images are already clean.  :)'
+  else
+    docker rmi $(docker images -f "dangling=true" -q)
+  fi
+}
+
+function docker-clean-volumes() {
+  docker volume rm $(docker volume ls -qf dangling=true)
+}
+```
+
+.imagine[![gray](images/sea_1.png)]]
+
+---
+
+---
+
+## Config
+
+Everything that can change between environments goes in ENV.
+
+```yaml
+development:
+  adapter: postgresql
+  host: <%= ENV['DATABASE_HOST'] %>
+  database: <%= ENV['DATABASE_NAME'] %>
+  username: <%= ENV['DATABASE_USER'] %>
+  pool: <%= ENV['DATABASE_POOL'] %>
+  encoding: utf8
+```
+
+These will get set by `dotenv` for dev and by `environment:` for docker.
+```sh
+DATABASE_NAME=monorail_development
+DATABASE_POOL=16
+DATABASE_HOST=db
+DATABASE_USER=monorail
+SIDEKIQ_URL=redis://redis:6379
+```
+
+---
+
+## Immutable Services just Run
+
+```
+brew uninstall redis                 # export out your data if you want and import
+docker run quay.io/widgetcorp/redis  # or run with kitematic!
+```
+
+This isn't just some version.  This is the prod version.  The prod binaries!
+
+The problem is, running with Kitematic isn't like `brew services`.
+
+```
+brew uninstall memcached
+docker run -d quay.io/widgetcorp/memcached /usr/bin/memcached -u app
+```
+
+---
+
+## Wins
+
+We are setting ourselves up here a little bit.
+Next steps:
+* Some (only some) config goes in shared location (knobs / switches / params)
+* Hostnames go in shared store (consul)
+* Health checks go through service names (or are automatic - fl
+* Packer has a chef client built in
+  * We can generate docker images that act as prod
+* CircleCI can run docker natively.
+* We can test our images.
+
+
+---
+
+## Server Spec
+
+```ruby
+# spec/monorail_base/monorail_spec.rb
+require "spec_helper"
+require "docker"
+
+# I'm sad that we can't have packer run these tests
+# as a post processor after building.  It tried it.
+# It doesn't do anything if the test fails.  Maybe
+# we could wrap it in another script but I think Packer would
+# hide the output from us.
+
+describe "monorail_base" do
+
+  before(:all) do
+    image = Docker::Image.get("widgetcorp/monorail_base")
+
+    set :os, family: :debian   # this can be set per spec
+    # describe package('httpd'), :if => os[:family] == 'redhat' do
+    #   it { should be_installed }
+    # end
+
+    set :backend, :docker
+    set :docker_image, image.id
+  end
+
+  it "has bash installed" do
+    expect(package("bash")).to be_installed
+  end
+
+end
+```
+
+---
+## End Game Level Stuff
+
+These things build on each other
+
+* We just tested our container and it's sha-level guaranteed to work
+  * deploy it!
+* Pull down image that failed on circleci and bash into it.
+* Compose new images just by changing yaml
+  * Memcached is done.  Like really done.
+
+
+---
+## Servers Become Docker Hosts
+
+.image-100[![](images/ubuntu.png)]
+
+---
+## Fill Resource Slots
+
+Point internally to services.  No need
+for haproxy pools.
+
+.image-100[![](images/etcd_cluster.png)]
+
+---
+## Rolling Deploys
+
+.image-100[![](images/coreos_dashboard.png)]
+
+---
+## Magical Fairy Land
+
+.image-100[![](images/deis_promises.png)]
+
+---
+## We Are Just Starting
+
+* Would stage 5 just be two docker servers?  I guess so.
+* Do we care about root?
+* What can we just drop?  Templates?
+* Zero downtime deploys with Unicorn.
+* Config and Secrets.  Confd works with Consul.
+
+---
+## Fails
+
+* Panamax - wtf
+* envconsul - Go can't fork like we want
+  * it does in fact restart the app correctly if -once is passed and you -QUIT the worker.
+  * But since -once has been passed, you can't reload the environment.
+* quay.io had some weird layers stuff - fixed in latest docker
+* muchkeys - `___` separators
+
+---
+## Get Real
+
+None of this is easy but we need to keep at this.
+
+* microservices
+* enabling developers to DIY
+* benchmarking
+
+
+---
+# The End
+
+* [CoreOS Intro By Kelsey Hightower at ESRI in PDX](https://www.youtube.com/watch?v=KFr9BHTgqkw)
+* [serverspec spike - squarism.com](http://squarism.com/2016/03/15/serverspec-and-packer/)
+* [Dillon and Dutch Shaking Hands](https://www.youtube.com/watch?v=VgPwXlTRuHs)
+* generative art from rectangleworld.com
+
+
+</textarea>
+
+<script src="scripts/remark.min.js"></script>
+<script>
+  var options = {
+    slideNumberFormat: function(current, total) {
+      return ""; // turn off slide numbers
+    }
+  };
+  var slideshow = remark.create(options);
+</script>
+
+</body>
+</html>
+
+<!--
+  vim:filetype=markdown
+-->
