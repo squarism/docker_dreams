@@ -154,9 +154,6 @@ At this point (mid 2016), just install docker beta for mac.
 `docker`<br>
 .small[_get help_]
 
-`docker-compose up`<br>
-.small[_runs all services in repo defined in docker-compose.yml_]
-
 .imagine[![gray](images/sea_1.png)]]
 
 
@@ -184,22 +181,7 @@ At this point (mid 2016), just install docker beta for mac.
 
 ---
 
-.image-100[![docker ecosystem](images/ecosystem_2.png)]
-
----
-
-.image-100[![docker ecosystem](images/ecosystem_3.png)]
-
----
-
 .image-100[![docker ecosystem](images/ecosystem_4.png)]
-
----
-class: center
-
-That third diagram was actually mobile gaming middleware in korea.
-
-.image-40[![troll](images/tommy_lee.jpg)]
 
 ---
 
@@ -527,9 +509,6 @@ Quay lets you:
 In the future:
 * build docker image and push to quay on test pass
 
-You can run your own registry (called docker distribution).  There used to be some gotchas around deletes.
-For us, it's just easier to outsource.
-
 
 ---
 
@@ -599,7 +578,7 @@ docker-compose stop   # background
 ```
 
 ---
-## Hot Tip: Aliases
+## Useful Aliases
 
 ```bash
 # Project "Replacing Homebrew With Docker"
@@ -634,7 +613,7 @@ alias redis=redis-cli
 ---
 ## Aliases
 
-```
+```bash
 # Docker cleanup shortcuts
 function docker-clean-exited() {
   if [[ $(docker ps -a -q -f status=exited | wc -l) -eq 0 ]]; then
@@ -659,7 +638,6 @@ function docker-clean-volumes() {
 
 .imagine[![gray](images/sea_1.png)]]
 
----
 
 ---
 
@@ -709,14 +687,13 @@ docker run -d quay.io/widgetcorp/memcached /usr/bin/memcached -u app
 ## Wins
 
 We are setting ourselves up here a little bit.
-Next steps:
-* Some (only some) config goes in shared location (knobs / switches / params)
-* Hostnames go in shared store (consul)
-* Health checks go through service names (or are automatic - fl
-* Packer has a chef client built in
-  * We can generate docker images that act as prod
-* CircleCI can run docker natively.
-* We can test our images.
+
+* Our config settings become unhardcoded
+* Centralize hostnames in some shared store (consul)
+* Realistic prod images
+* CircleCI can run docker natively (faster tests?).
+* The next hire starts faster.
+* We can test our images (server spec!).
 
 
 ---
