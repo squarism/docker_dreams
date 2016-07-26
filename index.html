@@ -55,7 +55,7 @@ Not Real World | Too Specific/Too Real |
 
 ---
 
-## Our Production
+## Our Stack & Flow
 
 * Rails monorail, a few smaller apps
 * Configuration in Chef (templates partially)
@@ -96,10 +96,11 @@ Not Real World | Too Specific/Too Real |
 * We don't know it's going to work until we deploy to a staging environment.
 * Staging environments require us to bring almost everything.
 * Staging is full a lot.  Everything we do in prod has no power in dev domain.
-* Our Vagrant images are stale.  There wasn't use of them.
-* Vagrant took 13-19 minutes to rebuild.
-* We can't deploy Vagrant.
-* We can't run Vagrant in CI (I guess we could?).
+* Vagrant
+  * stale
+  * 13-19 minutes
+  * can't deploy
+  * can't run Vagrant in CI (I guess we could?)
 * Running micro services means running them in tmux.
   * This is weird when working on branches.
     * Person you are coordinating with has to pull and run the other repo.
@@ -194,12 +195,11 @@ At this point (mid 2016), just install docker beta for mac.
 .image-100[![docker ecosystem](images/ecosystem_4.png)]
 
 ---
-
-## So Confusing
+class: center
 
 That third diagram was actually mobile gaming middleware in korea.
 
-.image-40[![troll](images/troll.gif)]
+.image-40[![troll](images/tommy_lee.jpg)]
 
 ---
 
@@ -224,7 +224,7 @@ That third diagram was actually mobile gaming middleware in korea.
 * Understand competing space (kubernetes vs coreos)
 * Choose to avoid some things, don't learn all the things at once
   * Chunk similar products to save time, be mindful of your ignorance
-  * For example, I chunk kubernetes + coreos (fleet) together (not fair to kubernetes)
+  * I chunk kubernetes + coreos (fleet) together (not fair to kubernetes)
 
 ---
 
@@ -309,11 +309,6 @@ Why?  Because running a registry is sad mode. |
 _Limits:_ None we've found. |
 ]
 
----
-
-## Sum up of Configuration Stores
-
-.image-100[![gray](images/cm_stores.png)]
 
 ---
 
@@ -428,7 +423,7 @@ Docker Image Hierarchy
 ```
 Things That Change
 
-os base  | --> app_base   | --> app
+os_base  | --> app_base   | --> app
 ==========================================
 security |    ruby / libs |     master
 ------------------------------------------
@@ -840,6 +835,9 @@ None of this is easy but we need to keep at this.
   var options = {
     slideNumberFormat: function(current, total) {
       return ""; // turn off slide numbers
+    },
+    navigation: {
+      scroll: false
     }
   };
   var slideshow = remark.create(options);
